@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  font-family: "Quattrocento Sans", ui-sans-serif, system-ui, sans-serif;
+  background-color: #f1ead9;
+  color: #171412;
+  overscroll-behavior-y: none;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}

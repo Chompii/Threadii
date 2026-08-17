@@ -1,0 +1,17 @@
+{
+  "name": "Threadii",
+  "short_name": "Threadii",
+  "description": "Outfits from the clothes you already own.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F1EAD9",
+  "theme_color": "#3D6A85",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

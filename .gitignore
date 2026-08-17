@@ -1,0 +1,9 @@
+node_modules/
+client/dist/
+server/uploads/
+server/closet.db
+server/closet.db-shm
+server/closet.db-wal
+*.log
+.env
+.DS_Store

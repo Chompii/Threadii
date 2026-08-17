@@ -1,0 +1,21 @@
+export default function Logo({ size = 36, ring = true }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      className={ring ? "rounded-[22%] ring-1 ring-black/10" : "rounded-[22%]"}
+    >
+      <rect width="100" height="100" rx="24" fill="#F1EAD9" />
+      <rect x="33" y="37" width="10" height="26" rx="5" fill="#3D6A85" />
+      <rect x="57" y="37" width="10" height="26" rx="5" fill="#3D6A85" />
+      <path
+        d="M31 65 Q50 83 69 65"
+        stroke="#3D6A85"
+        strokeWidth="7.5"
+        fill="none"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

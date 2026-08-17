@@ -1,0 +1,25 @@
+# Generated starting point — `fly launch` will offer to adjust this.
+# You must change `app` to something globally unique before deploying.
+app = "threadii-app"
+primary_region = "iad"
+
+[build]
+
+[env]
+  DB_PATH = "/data/closet.db"
+  UPLOADS_DIR = "/data/uploads"
+
+[[mounts]]
+  source = "threadii_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
