@@ -2,7 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
+html {
+  /* Matches the header/theme color — iOS standalone mode (black-translucent
+     status bar) sometimes paints this behind the notch/status bar instead of
+     the header's own background, so a mismatch here shows as a stray bar. */
+  background-color: #3d6a85;
+}
+
 body {
   font-family: "Quattrocento Sans", ui-sans-serif, system-ui, sans-serif;
   background-color: #f1ead9;
