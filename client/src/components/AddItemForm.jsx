@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { addItem } from "../api/client.js";
-import { CATEGORIES, COLORS, SEASONS, OCCASIONS } from "../constants.js";
+import { CATEGORIES, SEASONS, OCCASIONS } from "../constants.js";
 import Spinner from "./Spinner.jsx";
 import TagInput from "./TagInput.jsx";
+import ColorPicker from "./ColorPicker.jsx";
 
 const initial = {
   name: "",
@@ -93,31 +94,23 @@ export default function AddItemForm({ onAdded }) {
             onChange={(e) => update("name", e.target.value)}
             className={fieldClass}
           />
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              value={fields.category}
-              onChange={(e) => update("category", e.target.value)}
-              className={`${fieldClass} capitalize`}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <select
-              value={fields.color}
-              onChange={(e) => update("color", e.target.value)}
-              className={`${fieldClass} capitalize`}
-            >
-              {COLORS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={fields.category}
+            onChange={(e) => update("category", e.target.value)}
+            className={`${fieldClass} capitalize`}
+          >
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </div>
+      </div>
+
+      <div>
+        <label className="font-caption text-xs text-taupe block mb-1">Color</label>
+        <ColorPicker value={fields.color} onChange={(c) => update("color", c)} />
       </div>
 
       <div className="grid grid-cols-2 gap-2">

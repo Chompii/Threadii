@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { updateItem, deleteItem, setArchived } from "../api/client.js";
-import { CATEGORIES, COLORS, SEASONS, OCCASIONS } from "../constants.js";
+import { CATEGORIES, SEASONS, OCCASIONS } from "../constants.js";
 import Spinner from "./Spinner.jsx";
 import TagInput from "./TagInput.jsx";
+import ColorPicker from "./ColorPicker.jsx";
 
 const fieldClass =
   "w-full rounded-xl border border-taupe/25 bg-white px-3 py-2.5 text-sm font-body text-ink focus:outline-none focus:ring-2 focus:ring-steel/40";
@@ -115,31 +116,23 @@ export default function EditItemForm({ item, onSaved, onDeleted, onArchived }) {
             onChange={(e) => update("name", e.target.value)}
             className={fieldClass}
           />
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              value={fields.category}
-              onChange={(e) => update("category", e.target.value)}
-              className={`${fieldClass} capitalize`}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <select
-              value={fields.color}
-              onChange={(e) => update("color", e.target.value)}
-              className={`${fieldClass} capitalize`}
-            >
-              {COLORS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={fields.category}
+            onChange={(e) => update("category", e.target.value)}
+            className={`${fieldClass} capitalize`}
+          >
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </div>
+      </div>
+
+      <div>
+        <label className="font-caption text-xs text-taupe block mb-1">Color</label>
+        <ColorPicker value={fields.color} onChange={(c) => update("color", c)} />
       </div>
 
       <div className="grid grid-cols-2 gap-2">
