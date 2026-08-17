@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { exportData } from "../api/client.js";
 import ClosetGaps from "./ClosetGaps.jsx";
+import WearStats from "./WearStats.jsx";
 import Spinner from "./Spinner.jsx";
 
 function formatMemberSince(createdAt) {
@@ -57,6 +58,8 @@ export default function AccountTab({ user, items, onLogout, onOpenArchived }) {
           <p className="font-caption text-xs text-taupe">Member since {memberSince}</p>
         )}
       </div>
+
+      <WearStats />
 
       <ClosetGaps items={items} />
 

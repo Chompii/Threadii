@@ -167,3 +167,9 @@ export function unmarkDisliked(id) {
 export function exportData() {
   return apiFetch("/export");
 }
+
+// --- stats ---
+
+export function getStats() {
+  return apiFetch("/stats");
+}

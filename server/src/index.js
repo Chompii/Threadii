@@ -9,6 +9,7 @@ import favoritesRouter from "./routes/favorites.js";
 import wornRouter from "./routes/worn.js";
 import dislikesRouter from "./routes/dislikes.js";
 import exportRouter from "./routes/export.js";
+import statsRouter from "./routes/stats.js";
 import authRouter from "./routes/auth.js";
 import { requireAuth } from "./middleware/auth.js";
 import { UPLOADS_DIR } from "./paths.js";
@@ -29,6 +30,7 @@ app.use("/api/favorites", requireAuth, favoritesRouter);
 app.use("/api/worn", requireAuth, wornRouter);
 app.use("/api/dislikes", requireAuth, dislikesRouter);
 app.use("/api/export", requireAuth, exportRouter);
+app.use("/api/stats", requireAuth, statsRouter);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
