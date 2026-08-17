@@ -72,6 +72,17 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS planned_outfits (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    planned_date TEXT NOT NULL,
+    item_ids TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id, planned_date)
+  );
+`);
+
 // Migrations for databases created before these columns existed.
 const migrations = [
   "ALTER TABLE favorites ADD COLUMN note TEXT NOT NULL DEFAULT ''",

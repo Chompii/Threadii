@@ -2,6 +2,7 @@ const TABS = [
   { key: "closet", label: "Closet", icon: ClosetIcon },
   { key: "outfits", label: "Outfits", icon: OutfitsIcon },
   { key: "favorites", label: "Favorites", icon: FavoritesIcon },
+  { key: "calendar", label: "Plan", icon: CalendarIcon },
   { key: "account", label: "Account", icon: AccountIcon },
 ];
 
@@ -80,6 +81,25 @@ function FavoritesIcon({ active }) {
   );
 }
 
+function CalendarIcon({ active }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <rect
+        x="3.5"
+        y="5"
+        width="17"
+        height="15.5"
+        rx="2"
+        stroke={active ? "#3D6A85" : "#8A6F52"}
+        strokeWidth="1.6"
+        fill={active ? "#3D6A8522" : "none"}
+      />
+      <path d="M3.5 9.5h17" stroke={active ? "#3D6A85" : "#8A6F52"} strokeWidth="1.6" />
+      <path d="M8 3v4M16 3v4" stroke={active ? "#3D6A85" : "#8A6F52"} strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function AccountIcon({ active }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -105,7 +125,7 @@ function AccountIcon({ active }) {
 export default function BottomNav({ tab, onChange }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 bg-cream/95 backdrop-blur border-t border-taupe/15 safe-bottom">
-      <div className="max-w-md mx-auto grid grid-cols-4">
+      <div className="max-w-md mx-auto grid grid-cols-5">
         {TABS.map(({ key, label, icon: Icon }) => {
           const active = tab === key;
           return (

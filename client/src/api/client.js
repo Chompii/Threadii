@@ -173,3 +173,21 @@ export function exportData() {
 export function getStats() {
   return apiFetch("/stats");
 }
+
+// --- calendar ---
+
+export function getCalendar() {
+  return apiFetch("/calendar");
+}
+
+export function setCalendarDay(date, itemIds) {
+  return apiFetch(`/calendar/${date}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ itemIds }),
+  });
+}
+
+export function removeCalendarDay(date) {
+  return apiFetch(`/calendar/${date}`, { method: "DELETE" });
+}

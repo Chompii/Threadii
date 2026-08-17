@@ -6,6 +6,7 @@ import EditItemForm from "./components/EditItemForm.jsx";
 import ClosetView from "./components/ClosetView.jsx";
 import OutfitSuggestions from "./components/OutfitSuggestions.jsx";
 import FavoritesGrid from "./components/FavoritesGrid.jsx";
+import OutfitCalendar from "./components/OutfitCalendar.jsx";
 import AccountTab from "./components/AccountTab.jsx";
 import ArchivedItemsList from "./components/ArchivedItemsList.jsx";
 import AuthScreen from "./components/AuthScreen.jsx";
@@ -163,6 +164,8 @@ export default function App() {
               <OutfitSuggestions items={items} />
             ) : tab === "favorites" ? (
               <FavoritesGrid />
+            ) : tab === "calendar" ? (
+              <OutfitCalendar items={items} />
             ) : (
               <AccountTab
                 user={user}

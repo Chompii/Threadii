@@ -22,7 +22,9 @@ const HARMONY_SENTENCE = {
 export function describeOutfit(pieces, { harmony, pair }) {
   if (pieces.length === 1) {
     const [p] = pieces;
-    return `A one-piece look — the ${p.color} ${p.name.toLowerCase()} does all the work, no matching required.`;
+    const name = p.name.toLowerCase();
+    const label = name.includes(p.color) ? name : `${p.color} ${name}`;
+    return `A one-piece look — the ${label} does all the work, no matching required.`;
   }
 
   const sentenceFn = HARMONY_SENTENCE[harmony] || HARMONY_SENTENCE.analogous;

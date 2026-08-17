@@ -10,6 +10,7 @@ import wornRouter from "./routes/worn.js";
 import dislikesRouter from "./routes/dislikes.js";
 import exportRouter from "./routes/export.js";
 import statsRouter from "./routes/stats.js";
+import calendarRouter from "./routes/calendar.js";
 import authRouter from "./routes/auth.js";
 import { requireAuth } from "./middleware/auth.js";
 import { UPLOADS_DIR } from "./paths.js";
@@ -31,6 +32,7 @@ app.use("/api/worn", requireAuth, wornRouter);
 app.use("/api/dislikes", requireAuth, dislikesRouter);
 app.use("/api/export", requireAuth, exportRouter);
 app.use("/api/stats", requireAuth, statsRouter);
+app.use("/api/calendar", requireAuth, calendarRouter);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
