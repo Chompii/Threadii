@@ -83,6 +83,16 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS packing_lists (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    item_ids TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+`);
+
 // Migrations for databases created before these columns existed.
 const migrations = [
   "ALTER TABLE favorites ADD COLUMN note TEXT NOT NULL DEFAULT ''",

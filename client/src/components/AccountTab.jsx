@@ -12,7 +12,7 @@ function formatMemberSince(createdAt) {
   return date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 
-export default function AccountTab({ user, items, onLogout, onOpenArchived }) {
+export default function AccountTab({ user, items, onLogout, onOpenArchived, onOpenPacking }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -70,6 +70,12 @@ export default function AccountTab({ user, items, onLogout, onOpenArchived }) {
           className="w-full rounded-xl border border-taupe/25 text-ink py-2.5 text-sm font-body font-bold active:bg-sky/10 transition-colors"
         >
           Archived items
+        </button>
+        <button
+          onClick={onOpenPacking}
+          className="w-full rounded-xl border border-taupe/25 text-ink py-2.5 text-sm font-body font-bold active:bg-sky/10 transition-colors"
+        >
+          Packing lists
         </button>
         <button
           onClick={handleExport}

@@ -9,6 +9,7 @@ import FavoritesGrid from "./components/FavoritesGrid.jsx";
 import OutfitCalendar from "./components/OutfitCalendar.jsx";
 import AccountTab from "./components/AccountTab.jsx";
 import ArchivedItemsList from "./components/ArchivedItemsList.jsx";
+import PackingLists from "./components/PackingLists.jsx";
 import AuthScreen from "./components/AuthScreen.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import Sheet from "./components/Sheet.jsx";
@@ -28,6 +29,7 @@ export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [archivedSheetOpen, setArchivedSheetOpen] = useState(false);
+  const [packingSheetOpen, setPackingSheetOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
 
   useEffect(() => {
@@ -172,6 +174,7 @@ export default function App() {
                 items={items}
                 onLogout={handleLogout}
                 onOpenArchived={() => setArchivedSheetOpen(true)}
+                onOpenPacking={() => setPackingSheetOpen(true)}
               />
             )}
           </div>
@@ -221,6 +224,14 @@ export default function App() {
         title="Archived items"
       >
         <ArchivedItemsList onRestored={handleItemRestored} />
+      </Sheet>
+
+      <Sheet
+        open={packingSheetOpen}
+        onClose={() => setPackingSheetOpen(false)}
+        title="Packing lists"
+      >
+        <PackingLists items={items} />
       </Sheet>
     </div>
   );

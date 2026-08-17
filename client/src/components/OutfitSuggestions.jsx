@@ -84,7 +84,12 @@ export default function OutfitSuggestions({ items }) {
     setError(null);
     setSelectedIndex(null);
     try {
-      const result = await suggestOutfits({ season, occasion, anchorIds });
+      const result = await suggestOutfits({
+        season,
+        occasion,
+        anchorIds,
+        itemIds: items.map((i) => i.id),
+      });
       setOutfits(result);
     } catch (err) {
       setError(err.message);

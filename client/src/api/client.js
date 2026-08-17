@@ -88,11 +88,12 @@ export function setArchived(id, archived) {
 
 // --- outfits ---
 
-export function suggestOutfits({ season, occasion, anchorIds } = {}) {
+export function suggestOutfits({ season, occasion, anchorIds, itemIds } = {}) {
   const params = new URLSearchParams();
   if (season) params.set("season", season);
   if (occasion) params.set("occasion", occasion);
   if (anchorIds && anchorIds.length > 0) params.set("anchorIds", anchorIds.join(","));
+  if (itemIds && itemIds.length > 0) params.set("itemIds", itemIds.join(","));
   return apiFetch(`/outfits/suggest?${params.toString()}`);
 }
 
@@ -190,4 +191,22 @@ export function setCalendarDay(date, itemIds) {
 
 export function removeCalendarDay(date) {
   return apiFetch(`/calendar/${date}`, { method: "DELETE" });
+}
+
+// --- packing lists ---
+
+export function getPackingLists() {
+  return apiFetch("/packing");
+}
+
+export function createPackingList(name, itemIds) {
+  return apiFetch("/packing", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, itemIds }),
+  });
+}
+
+export function deletePackingList(id) {
+  return apiFetch(`/packing/${id}`, { method: "DELETE" });
 }

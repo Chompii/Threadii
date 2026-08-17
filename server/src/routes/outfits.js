@@ -6,10 +6,15 @@ import { outfitSignature } from "../signature.js";
 const router = Router();
 
 router.get("/suggest", (req, res) => {
-  const { season, occasion, anchorIds } = req.query;
-  const items = db
+  const { season, occasion, anchorIds, itemIds } = req.query;
+  let items = db
     .prepare("SELECT * FROM items WHERE user_id = ? AND archived = 0 AND in_laundry = 0")
     .all(req.userId);
+
+  if (itemIds) {
+    const idSet = new Set(itemIds.split(",").filter(Boolean));
+    items = items.filter((i) => idSet.has(i.id));
+  }
 
   let anchorItems = [];
   if (anchorIds) {
