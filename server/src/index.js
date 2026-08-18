@@ -2,7 +2,14 @@ import express from "express";
 import cors from "cors";
 import fs from "node:fs";
 import path from "node:path";
+import dns from "node:dns";
 import { fileURLToPath } from "node:url";
+
+// Some hosts advertise IPv6 that's effectively unroutable — Node's fetch
+// (unlike curl) tries AAAA records first and eats a ~20s connect timeout
+// before falling back to IPv4. Preferring IPv4 avoids that stall entirely,
+// which matters for the Gemini call's own timeout budget in aiRank.js.
+dns.setDefaultResultOrder("ipv4first");
 
 const envPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", ".env");
 if (fs.existsSync(envPath)) process.loadEnvFile(envPath);
