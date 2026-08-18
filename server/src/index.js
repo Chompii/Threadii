@@ -3,6 +3,10 @@ import cors from "cors";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+const envPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", ".env");
+if (fs.existsSync(envPath)) process.loadEnvFile(envPath);
+
 import itemsRouter from "./routes/items.js";
 import outfitsRouter from "./routes/outfits.js";
 import favoritesRouter from "./routes/favorites.js";

@@ -2,10 +2,13 @@ import { Router } from "express";
 import db from "../db.js";
 import { suggestOutfits } from "../outfits.js";
 import { outfitSignature } from "../signature.js";
+import { rankOutfitsWithAI } from "../aiRank.js";
 
 const router = Router();
+const RESULT_LIMIT = 3;
+const AI_POOL_SIZE = 8;
 
-router.get("/suggest", (req, res) => {
+router.get("/suggest", async (req, res) => {
   const { season, occasion, anchorIds, itemIds } = req.query;
   let items = db
     .prepare("SELECT * FROM items WHERE user_id = ? AND archived = 0 AND in_laundry = 0")
@@ -31,7 +34,16 @@ router.get("/suggest", (req, res) => {
     [...wornRows, ...dislikeRows].map((row) => outfitSignature(JSON.parse(row.item_ids)))
   );
 
-  const outfits = suggestOutfits(items, { season, occasion, anchorItems, excludeSignatures });
+  const pool = suggestOutfits(items, {
+    season,
+    occasion,
+    anchorItems,
+    excludeSignatures,
+    limit: AI_POOL_SIZE,
+  });
+
+  const aiRanked = await rankOutfitsWithAI(pool, { season, occasion, pickCount: Math.min(RESULT_LIMIT, pool.length) });
+  const outfits = (aiRanked || pool).slice(0, RESULT_LIMIT);
   res.json(outfits);
 });
 
