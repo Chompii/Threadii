@@ -101,6 +101,12 @@ export default function OutfitCard({
   const rightRevealOpacity = Math.min(Math.max(dragX, 0) / SWIPE_THRESHOLD, 1);
   const leftRevealOpacity = Math.min(Math.max(-dragX, 0) / SWIPE_THRESHOLD, 1);
 
+  // The card shows the core look — top/bottom/dress + outerwear. Shoes (and
+  // any accessory picked in the detail view) are still part of the real
+  // outfit, just surfaced on the detail screen instead of cluttering the card.
+  const summaryPieces = pieces.filter((p) => p.category !== "shoes");
+  const hasMore = summaryPieces.length < pieces.length;
+
   return (
     <div className="relative">
       {enableSwipe && (
@@ -155,28 +161,43 @@ export default function OutfitCard({
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {pieces.map((p) => (
-            <div key={p.id} className="flex-1 min-w-[70px]">
-              <div className="aspect-square rounded-xl bg-sky/25 overflow-hidden flex items-center justify-center border border-taupe/15">
-                {p.image_path ? (
-                  <img src={p.image_path} alt={p.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span
-                    className="w-6 h-6 rounded-full border border-black/10"
-                    style={{ backgroundColor: COLOR_SWATCH[p.color] || "#ccc" }}
-                  />
-                )}
+          {summaryPieces.map((p) => {
+            const isOuterwear = p.category === "outerwear";
+            return (
+              <div key={p.id} className={isOuterwear ? "flex-[1.6] min-w-[100px]" : "flex-1 min-w-[70px]"}>
+                <div
+                  className={`rounded-xl bg-sky/25 overflow-hidden flex items-center justify-center border ${
+                    isOuterwear ? "aspect-[4/3] border-2 border-steel/30" : "aspect-square border-taupe/15"
+                  }`}
+                >
+                  {p.image_path ? (
+                    <img src={p.image_path} alt={p.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span
+                      className={`rounded-full border border-black/10 ${isOuterwear ? "w-8 h-8" : "w-6 h-6"}`}
+                      style={{ backgroundColor: COLOR_SWATCH[p.color] || "#ccc" }}
+                    />
+                  )}
+                </div>
+                <p
+                  className={`font-caption text-[11px] truncate mt-1 text-center capitalize ${
+                    isOuterwear ? "text-ink font-bold" : "text-taupe"
+                  }`}
+                >
+                  {p.name}
+                </p>
               </div>
-              <p className="font-caption text-[11px] text-taupe truncate mt-1 text-center capitalize">
-                {p.name}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
         {description && (
           <p className="font-body text-sm text-ink/80 leading-snug line-clamp-2">{description}</p>
         )}
-        {onClick && <p className="font-caption text-xs text-steel">Tap for details →</p>}
+        {onClick && (
+          <p className="font-caption text-xs text-steel">
+            {hasMore ? "Shoes & more inside — tap for details →" : "Tap for details →"}
+          </p>
+        )}
         {enableSwipe && !isFavorite && (
           <p className="font-caption text-[11px] text-taupe/70">
             {onSwipeDislike ? "← Dismiss   ·   Swipe right to save →" : "Swipe right to save →"}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { COLOR_SWATCH } from "../constants.js";
 import { harmonyLabel } from "../colorHarmony.js";
+import { getAccessorySuggestions, addFavorite } from "../api/client.js";
 import HeartIcon from "./HeartIcon.jsx";
 import Spinner from "./Spinner.jsx";
 
@@ -36,6 +37,9 @@ export default function OutfitDetail({
   const [noteStatus, setNoteStatus] = useState("idle"); // idle | saving | saved
   const [collectionValue, setCollectionValue] = useState(collection || "");
   const [collectionStatus, setCollectionStatus] = useState("idle");
+  const [accessories, setAccessories] = useState([]);
+  const [selectedAccessoryId, setSelectedAccessoryId] = useState(null);
+  const [accessorySaveStatus, setAccessorySaveStatus] = useState("idle"); // idle | saving | saved
   const saveTimer = useRef(null);
   const collectionTimer = useRef(null);
   const label = harmonyLabel(outfit.harmony);
@@ -43,6 +47,28 @@ export default function OutfitDetail({
   useEffect(() => {
     setNoteValue(note);
   }, [note]);
+
+  useEffect(() => {
+    setSelectedAccessoryId(null);
+    setAccessorySaveStatus("idle");
+    getAccessorySuggestions(outfit.pieces.map((p) => p.id))
+      .then(setAccessories)
+      .catch(() => setAccessories([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outfit.pieces.map((p) => p.id).join(",")]);
+
+  const selectedAccessory = accessories.find((a) => a.id === selectedAccessoryId) || null;
+
+  async function handleSaveWithAccessory() {
+    if (!selectedAccessory || accessorySaveStatus === "saving") return;
+    setAccessorySaveStatus("saving");
+    try {
+      await addFavorite([...outfit.pieces.map((p) => p.id), selectedAccessory.id]);
+      setAccessorySaveStatus("saved");
+    } catch {
+      setAccessorySaveStatus("idle");
+    }
+  }
 
   useEffect(() => {
     setCollectionValue(collection || "");
@@ -144,27 +170,100 @@ export default function OutfitDetail({
           </span>
 
           <div className="grid grid-cols-2 gap-3">
-            {outfit.pieces.map((p) => (
-              <div key={p.id} className="bg-white rounded-2xl border border-taupe/15 overflow-hidden shadow-sm">
-                <div className="aspect-square bg-sky/25 flex items-center justify-center">
-                  {p.image_path ? (
-                    <img src={p.image_path} alt={p.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span
-                      className="w-10 h-10 rounded-full border border-black/10"
-                      style={{ backgroundColor: COLOR_SWATCH[p.color] || "#ccc" }}
-                    />
-                  )}
+            {outfit.pieces.map((p) => {
+              const isOuterwear = p.category === "outerwear";
+              return (
+                <div
+                  key={p.id}
+                  className={`bg-white rounded-2xl border overflow-hidden shadow-sm ${
+                    isOuterwear ? "col-span-2 border-2 border-steel/30" : "border-taupe/15"
+                  }`}
+                >
+                  <div className={`bg-sky/25 flex items-center justify-center ${isOuterwear ? "aspect-[2/1]" : "aspect-square"}`}>
+                    {p.image_path ? (
+                      <img src={p.image_path} alt={p.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span
+                        className="w-10 h-10 rounded-full border border-black/10"
+                        style={{ backgroundColor: COLOR_SWATCH[p.color] || "#ccc" }}
+                      />
+                    )}
+                  </div>
+                  <div className="px-2.5 py-2 flex items-center justify-between gap-2">
+                    <p className="font-body text-sm font-bold text-ink truncate">{p.name}</p>
+                    {isOuterwear && (
+                      <span className="font-caption text-[10px] text-steel font-bold uppercase tracking-wide shrink-0">
+                        Layered
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="font-body text-sm font-bold text-ink px-2.5 py-2 truncate">{p.name}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="bg-white rounded-2xl border border-taupe/15 p-4 shadow-sm">
             <h3 className="font-caption text-xs text-taupe uppercase tracking-wide mb-1.5">Why it works</h3>
             <p className="font-body text-sm text-ink leading-relaxed">{outfit.description}</p>
           </div>
+
+          {accessories.length > 0 && (
+            <div className="bg-white rounded-2xl border border-taupe/15 p-4 shadow-sm space-y-3">
+              <h3 className="font-caption text-xs text-taupe uppercase tracking-wide">
+                Accessories that would work
+              </h3>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {accessories.map((a) => {
+                  const selected = a.id === selectedAccessoryId;
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedAccessoryId(selected ? null : a.id);
+                        setAccessorySaveStatus("idle");
+                      }}
+                      className="shrink-0 w-16 flex flex-col items-center gap-1"
+                    >
+                      <div
+                        className={`w-16 h-16 rounded-xl overflow-hidden bg-sky/25 flex items-center justify-center border-2 transition-colors ${
+                          selected ? "border-steel" : "border-transparent"
+                        }`}
+                      >
+                        {a.image_path ? (
+                          <img src={a.image_path} alt={a.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span
+                            className="w-7 h-7 rounded-full border border-black/10"
+                            style={{ backgroundColor: COLOR_SWATCH[a.color] || "#ccc" }}
+                          />
+                        )}
+                      </div>
+                      <span
+                        className={`font-caption text-[10px] truncate w-full text-center ${
+                          selected ? "text-steel font-bold" : "text-taupe"
+                        }`}
+                      >
+                        {a.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedAccessory && (
+                <button
+                  onClick={handleSaveWithAccessory}
+                  disabled={accessorySaveStatus === "saving" || accessorySaveStatus === "saved"}
+                  className="w-full rounded-xl border border-steel/30 text-steel py-2.5 text-sm font-body font-bold active:bg-sky/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {accessorySaveStatus === "saving" && <Spinner size={14} />}
+                  {accessorySaveStatus === "saved"
+                    ? `Saved with ${selectedAccessory.name} ✓`
+                    : `Save look with ${selectedAccessory.name}`}
+                </button>
+              )}
+            </div>
+          )}
 
           {(onMarkWorn || onUnmarkWorn) && (
             <div className="bg-white rounded-2xl border border-taupe/15 p-4 shadow-sm space-y-2">

@@ -98,6 +98,12 @@ export function suggestOutfits({ season, occasion, anchorIds, itemIds, count } =
   return apiFetch(`/outfits/suggest?${params.toString()}`);
 }
 
+export function getAccessorySuggestions(itemIds) {
+  const params = new URLSearchParams();
+  params.set("itemIds", itemIds.join(","));
+  return apiFetch(`/outfits/accessories?${params.toString()}`);
+}
+
 // --- favorites ---
 
 export function getFavorites() {

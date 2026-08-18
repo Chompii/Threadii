@@ -15,7 +15,15 @@ function buildPrompt(candidates, { season, occasion, pickCount }) {
     .filter(Boolean)
     .join(", ");
 
-  return `You are a fashion stylist. Below are ${candidates.length} candidate outfits pulled from someone's closet — they're already color-coordinated, so don't just judge whether colors technically match. Pick the ${pickCount} that would genuinely look the best and give the wearer the most confidence${context ? ` for ${context}` : ""}, ranked best first. For each pick, write one punchy, specific, encouraging sentence (max 20 words) on why it looks great.
+  return `You are a fashion stylist. Below are ${candidates.length} candidate outfits pulled from someone's closet — they're already color-coordinated, so don't just judge whether colors technically match. Every candidate already includes shoes, and some include a layered outerwear piece.
+
+Judge each candidate the way a good stylist would:
+- Color cohesion: reward a tight, intentional palette (ideally 3 colors or fewer across the whole outfit) over a busy one.
+- Cohesion of formality: the shoes and outerwear should suit the same occasion as the rest of the outfit — casual sneakers under a formal look (or vice versa) is a mismatch, not a plus.
+- Layering: an outerwear piece worn over the top adds polish when it fits — favor outfits that layer well over ones that don't, all else equal.
+- Confidence: would the wearer feel genuinely good walking out the door in this, not just "technically matching."
+
+Pick the ${pickCount} that best hit those, ranked best first${context ? ` for ${context}` : ""}. For each pick, write one punchy, specific, encouraging sentence (max 20 words) on why it looks great.
 
 Candidates:
 ${lines.join("\n")}

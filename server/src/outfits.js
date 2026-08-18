@@ -10,15 +10,43 @@ function matchesFilter(item, season, occasion) {
   return seasonOk && occasionOk;
 }
 
-// The one piece an outfit is "built around" — the dress, or else the top.
-// Grouping by this (rather than by the full top+bottom pair) is what lets
-// round-robin selection rotate through different tops instead of one
-// high-scoring top crowding out every other option.
-function anchorKey(pieces) {
-  const dress = pieces.find((p) => p.category === "dress");
-  if (dress) return `dress:${dress.id}`;
-  const top = pieces.find((p) => p.category === "top");
-  return top ? `top:${top.id}` : "other";
+function pieceId(pieces, category) {
+  return pieces.find((p) => p.category === category)?.id ?? null;
+}
+
+// Greedily builds a diverse top-N: at each step, picks the highest-scoring
+// remaining candidate among those least reused so far (by top, bottom, and
+// dress), so a single piece that happens to harmonize with everything can't
+// crowd out every other option — this balances variety across both the top
+// AND the bottom, not just one or the other.
+function selectDiverse(sortedCandidates, limit) {
+  const usage = { top: new Map(), bottom: new Map(), dress: new Map() };
+  const remaining = [...sortedCandidates];
+  const picked = [];
+
+  while (picked.length < limit && remaining.length > 0) {
+    let bestIdx = 0;
+    let bestPenalty = Infinity;
+    for (let i = 0; i < remaining.length; i++) {
+      const pieces = remaining[i].pieces;
+      const penalty =
+        (usage.top.get(pieceId(pieces, "top")) || 0) +
+        (usage.bottom.get(pieceId(pieces, "bottom")) || 0) +
+        (usage.dress.get(pieceId(pieces, "dress")) || 0);
+      if (penalty < bestPenalty) {
+        bestPenalty = penalty;
+        bestIdx = i;
+        if (penalty === 0) break; // candidates are pre-sorted by score; first zero-penalty wins
+      }
+    }
+    const [chosen] = remaining.splice(bestIdx, 1);
+    picked.push(chosen);
+    for (const category of ["top", "bottom", "dress"]) {
+      const id = pieceId(chosen.pieces, category);
+      if (id) usage[category].set(id, (usage[category].get(id) || 0) + 1);
+    }
+  }
+  return picked;
 }
 
 // anchorItems, if given (up to one per category), must each appear in every
@@ -42,7 +70,6 @@ export function suggestOutfits(
   let dresses = byCategory("dress");
   let outerwear = byCategory("outerwear");
   let shoes = byCategory("shoes");
-  let accessories = byCategory("accessory");
 
   // A top/bottom anchor rules out dress outfits entirely (a dress outfit
   // can't also feature a specific top or bottom), and vice versa.
@@ -62,13 +89,8 @@ export function suggestOutfits(
   if (anchorsByCategory.shoes) {
     shoes = shoes.filter((s) => s.id === anchorsByCategory.shoes.id);
   }
-  if (anchorsByCategory.accessory) {
-    accessories = accessories.filter((a) => a.id === anchorsByCategory.accessory.id);
-  }
 
   outerwear = outerwear.slice(0, MAX_PER_OPTIONAL_SLOT);
-  shoes = shoes.slice(0, MAX_PER_OPTIONAL_SLOT);
-  accessories = accessories.slice(0, MAX_PER_OPTIONAL_SLOT);
 
   const bases = [];
   for (const d of dresses) bases.push([d]);
@@ -76,27 +98,34 @@ export function suggestOutfits(
     for (const b of bottoms) bases.push([t, b]);
   }
 
-  // An optional slot stays optional (can be skipped) unless an anchor lives
-  // in it, in which case it's required in every combo.
-  const optionalSlot = (list, category) => (anchorsByCategory[category] ? list : [null, ...list]);
-
-  const optionalSlots = [
-    optionalSlot(outerwear, "outerwear"),
-    optionalSlot(shoes, "shoes"),
-    optionalSlot(accessories, "accessory"),
-  ];
+  // Outerwear stays optional (not every outfit needs a jacket) unless
+  // anchored. Shoes are never optional — a real outfit always has shoes —
+  // so rather than treating them as another combinatorial branch (which
+  // just multiplies near-duplicate outfits), the single best-matching pair
+  // is picked deterministically per base+outerwear combo.
+  const outerwearOptions = anchorsByCategory.outerwear ? outerwear : [null, ...outerwear];
 
   const results = [];
   for (const base of bases) {
-    for (const o of optionalSlots[0]) {
-      for (const s of optionalSlots[1]) {
-        for (const a of optionalSlots[2]) {
-          const pieces = [...base, o, s, a].filter(Boolean);
-          const colors = pieces.map((p) => p.color);
-          const { score, harmony, pair } = scoreOutfit(colors);
-          results.push({ pieces, score, harmony, pair });
+    for (const o of outerwearOptions) {
+      const partial = [...base, o].filter(Boolean);
+
+      let shoeChoice = null;
+      if (shoes.length > 0) {
+        let bestScore = -Infinity;
+        for (const s of shoes) {
+          const { score } = scoreOutfit([...partial.map((p) => p.color), s.color]);
+          if (score > bestScore) {
+            bestScore = score;
+            shoeChoice = s;
+          }
         }
       }
+
+      const pieces = [...partial, shoeChoice].filter(Boolean);
+      const colors = pieces.map((p) => p.color);
+      const { score, harmony, pair } = scoreOutfit(colors);
+      results.push({ pieces, score, harmony, pair });
     }
   }
 
@@ -119,29 +148,7 @@ export function suggestOutfits(
     deduped.push(r);
   }
 
-  // Round-robin across distinct tops/dresses instead of taking the highest
-  // score overall — otherwise one top that happens to harmonize with
-  // everything can crowd out every other top in the results.
-  const groups = new Map();
-  for (const r of deduped) {
-    const key = anchorKey(r.pieces);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(r);
-  }
-  const orderedGroups = [...groups.values()].sort((a, b) => b[0].score - a[0].score);
-
-  const finalResults = [];
-  for (let round = 0; finalResults.length < limit; round++) {
-    let addedThisRound = false;
-    for (const group of orderedGroups) {
-      if (round < group.length) {
-        finalResults.push(group[round]);
-        addedThisRound = true;
-        if (finalResults.length >= limit) break;
-      }
-    }
-    if (!addedThisRound) break;
-  }
+  const finalResults = selectDiverse(deduped, limit);
 
   return finalResults.map((r) => ({
     pieces: r.pieces,
