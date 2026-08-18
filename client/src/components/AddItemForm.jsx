@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { addItem } from "../api/client.js";
 import { CATEGORIES, SEASONS, OCCASIONS } from "../constants.js";
+import { detectDominantColorName } from "../colorDetection.js";
 import Spinner from "./Spinner.jsx";
 import TagInput from "./TagInput.jsx";
 import ColorPicker from "./ColorPicker.jsx";
@@ -23,16 +24,29 @@ export default function AddItemForm({ onAdded }) {
   const [preview, setPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [colorDetected, setColorDetected] = useState(false);
   const fileInputRef = useRef(null);
 
   function update(key, value) {
     setFields((f) => ({ ...f, [key]: value }));
+    if (key === "color") setColorDetected(false);
   }
 
-  function handleFile(e) {
+  async function handleFile(e) {
     const f = e.target.files?.[0] ?? null;
     setFile(f);
     setPreview(f ? URL.createObjectURL(f) : null);
+    if (!f) return;
+
+    try {
+      const detected = await detectDominantColorName(f);
+      if (detected) {
+        setFields((prev) => ({ ...prev, color: detected }));
+        setColorDetected(true);
+      }
+    } catch {
+      // detection is a nice-to-have; silently skip on any failure
+    }
   }
 
   async function handleSubmit(e) {
@@ -55,6 +69,7 @@ export default function AddItemForm({ onAdded }) {
       setTags([]);
       setFile(null);
       setPreview(null);
+      setColorDetected(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
       setError(err.message);
@@ -109,7 +124,12 @@ export default function AddItemForm({ onAdded }) {
       </div>
 
       <div>
-        <label className="font-caption text-xs text-taupe block mb-1">Color</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="font-caption text-xs text-taupe">Color</label>
+          {colorDetected && (
+            <span className="font-caption text-[11px] text-emerald-600">Detected from photo</span>
+          )}
+        </div>
         <ColorPicker value={fields.color} onChange={(c) => update("color", c)} />
       </div>
 

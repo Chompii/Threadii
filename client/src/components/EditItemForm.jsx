@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { updateItem, deleteItem, setArchived } from "../api/client.js";
 import { CATEGORIES, SEASONS, OCCASIONS } from "../constants.js";
+import { detectDominantColorName } from "../colorDetection.js";
 import Spinner from "./Spinner.jsx";
 import TagInput from "./TagInput.jsx";
 import ColorPicker from "./ColorPicker.jsx";
@@ -23,17 +24,29 @@ export default function EditItemForm({ item, onSaved, onDeleted, onArchived }) {
   const [deleting, setDeleting] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState(null);
+  const [colorDetected, setColorDetected] = useState(false);
   const fileInputRef = useRef(null);
 
   function update(key, value) {
     setFields((f) => ({ ...f, [key]: value }));
+    if (key === "color") setColorDetected(false);
   }
 
-  function handleFile(e) {
+  async function handleFile(e) {
     const f = e.target.files?.[0] ?? null;
     if (!f) return;
     setFile(f);
     setPreview(URL.createObjectURL(f));
+
+    try {
+      const detected = await detectDominantColorName(f);
+      if (detected) {
+        setFields((prev) => ({ ...prev, color: detected }));
+        setColorDetected(true);
+      }
+    } catch {
+      // detection is a nice-to-have; silently skip on any failure
+    }
   }
 
   async function handleSubmit(e) {
@@ -131,7 +144,12 @@ export default function EditItemForm({ item, onSaved, onDeleted, onArchived }) {
       </div>
 
       <div>
-        <label className="font-caption text-xs text-taupe block mb-1">Color</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="font-caption text-xs text-taupe">Color</label>
+          {colorDetected && (
+            <span className="font-caption text-[11px] text-emerald-600">Detected from photo</span>
+          )}
+        </div>
         <ColorPicker value={fields.color} onChange={(c) => update("color", c)} />
       </div>
 
