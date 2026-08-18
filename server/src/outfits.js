@@ -3,7 +3,6 @@ import { describeOutfit } from "./describe.js";
 import { outfitSignature } from "./signature.js";
 
 const MAX_PER_OPTIONAL_SLOT = 6; // cap to keep combinations fast for large closets
-const BASE_CATEGORIES = new Set(["top", "bottom", "dress"]);
 
 function matchesFilter(item, season, occasion) {
   const seasonOk = !season || season === "all" || item.season === "all" || item.season === season;
@@ -11,12 +10,15 @@ function matchesFilter(item, season, occasion) {
   return seasonOk && occasionOk;
 }
 
-function baseKey(pieces) {
-  return pieces
-    .filter((p) => BASE_CATEGORIES.has(p.category))
-    .map((p) => p.id)
-    .sort()
-    .join(",");
+// The one piece an outfit is "built around" — the dress, or else the top.
+// Grouping by this (rather than by the full top+bottom pair) is what lets
+// round-robin selection rotate through different tops instead of one
+// high-scoring top crowding out every other option.
+function anchorKey(pieces) {
+  const dress = pieces.find((p) => p.category === "dress");
+  if (dress) return `dress:${dress.id}`;
+  const top = pieces.find((p) => p.category === "top");
+  return top ? `top:${top.id}` : "other";
 }
 
 // anchorItems, if given (up to one per category), must each appear in every
@@ -107,30 +109,39 @@ export function suggestOutfits(
 
   candidates.sort((a, b) => b.score - a.score);
 
-  // Pick the top outfits while preferring a different top/bottom (or dress)
-  // combo each time, so "top 3" isn't the same base outfit with 3 different
-  // pairs of shoes.
+  // Drop exact duplicate piece combos (same outfit, different iteration order).
   const seen = new Set();
-  const usedBases = new Set();
-  const primary = [];
-  const overflow = [];
-
+  const deduped = [];
   for (const r of candidates) {
     const key = r.pieces.map((p) => p.id).sort().join(",");
     if (seen.has(key)) continue;
     seen.add(key);
-
-    const base = baseKey(r.pieces);
-    if (usedBases.has(base)) {
-      overflow.push(r);
-    } else {
-      usedBases.add(base);
-      primary.push(r);
-    }
-    if (primary.length >= limit) break;
+    deduped.push(r);
   }
 
-  const finalResults = primary.length >= limit ? primary : [...primary, ...overflow].slice(0, limit);
+  // Round-robin across distinct tops/dresses instead of taking the highest
+  // score overall — otherwise one top that happens to harmonize with
+  // everything can crowd out every other top in the results.
+  const groups = new Map();
+  for (const r of deduped) {
+    const key = anchorKey(r.pieces);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  }
+  const orderedGroups = [...groups.values()].sort((a, b) => b[0].score - a[0].score);
+
+  const finalResults = [];
+  for (let round = 0; finalResults.length < limit; round++) {
+    let addedThisRound = false;
+    for (const group of orderedGroups) {
+      if (round < group.length) {
+        finalResults.push(group[round]);
+        addedThisRound = true;
+        if (finalResults.length >= limit) break;
+      }
+    }
+    if (!addedThisRound) break;
+  }
 
   return finalResults.map((r) => ({
     pieces: r.pieces,

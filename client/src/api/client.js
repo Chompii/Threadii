@@ -88,12 +88,13 @@ export function setArchived(id, archived) {
 
 // --- outfits ---
 
-export function suggestOutfits({ season, occasion, anchorIds, itemIds } = {}) {
+export function suggestOutfits({ season, occasion, anchorIds, itemIds, count } = {}) {
   const params = new URLSearchParams();
   if (season) params.set("season", season);
   if (occasion) params.set("occasion", occasion);
   if (anchorIds && anchorIds.length > 0) params.set("anchorIds", anchorIds.join(","));
   if (itemIds && itemIds.length > 0) params.set("itemIds", itemIds.join(","));
+  if (count) params.set("count", count);
   return apiFetch(`/outfits/suggest?${params.toString()}`);
 }
 

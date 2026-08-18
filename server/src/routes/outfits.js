@@ -5,11 +5,13 @@ import { outfitSignature } from "../signature.js";
 import { rankOutfitsWithAI } from "../aiRank.js";
 
 const router = Router();
-const RESULT_LIMIT = 3;
+const DEFAULT_LIMIT = 3;
 const AI_POOL_SIZE = 8;
+const MAX_LIMIT = 25;
 
 router.get("/suggest", async (req, res) => {
-  const { season, occasion, anchorIds, itemIds } = req.query;
+  const { season, occasion, anchorIds, itemIds, count } = req.query;
+  const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(count, 10) || DEFAULT_LIMIT));
   let items = db
     .prepare("SELECT * FROM items WHERE user_id = ? AND archived = 0 AND in_laundry = 0")
     .all(req.userId);
@@ -34,16 +36,23 @@ router.get("/suggest", async (req, res) => {
     [...wornRows, ...dislikeRows].map((row) => outfitSignature(JSON.parse(row.item_ids)))
   );
 
-  const pool = suggestOutfits(items, {
-    season,
-    occasion,
-    anchorItems,
-    excludeSignatures,
-    limit: AI_POOL_SIZE,
-  });
+  // Small requests (the default "top 3") go through the AI re-ranking pass.
+  // Larger requests ("Show more") skip it and return a purely rule-based,
+  // round-robin-diverse list instead — ranking/describing 20+ candidates
+  // with Gemini would be slow and isn't worth the API quota at that size.
+  if (limit <= DEFAULT_LIMIT) {
+    const pool = suggestOutfits(items, {
+      season,
+      occasion,
+      anchorItems,
+      excludeSignatures,
+      limit: AI_POOL_SIZE,
+    });
+    const aiRanked = await rankOutfitsWithAI(pool, { season, occasion, pickCount: Math.min(limit, pool.length) });
+    return res.json((aiRanked || pool).slice(0, limit));
+  }
 
-  const aiRanked = await rankOutfitsWithAI(pool, { season, occasion, pickCount: Math.min(RESULT_LIMIT, pool.length) });
-  const outfits = (aiRanked || pool).slice(0, RESULT_LIMIT);
+  const outfits = suggestOutfits(items, { season, occasion, anchorItems, excludeSignatures, limit });
   res.json(outfits);
 });
 

@@ -23,6 +23,8 @@ import UndoToast from "./UndoToast.jsx";
 const selectClass =
   "rounded-xl border border-taupe/25 bg-white px-2.5 py-2 text-sm font-body text-ink capitalize";
 
+const SHOW_MORE_COUNT = 25;
+
 export default function OutfitSuggestions({ items }) {
   const hasItems = items.length > 0;
   const [season, setSeason] = useState("all");
@@ -31,6 +33,8 @@ export default function OutfitSuggestions({ items }) {
   const [outfits, setOutfits] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showMoreLoading, setShowMoreLoading] = useState(false);
+  const [moreAvailable, setMoreAvailable] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherNote, setWeatherNote] = useState(null);
@@ -83,6 +87,7 @@ export default function OutfitSuggestions({ items }) {
     setLoading(true);
     setError(null);
     setSelectedIndex(null);
+    setMoreAvailable(true);
     try {
       const result = await suggestOutfits({
         season,
@@ -95,6 +100,28 @@ export default function OutfitSuggestions({ items }) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleShowMore() {
+    setShowMoreLoading(true);
+    setError(null);
+    try {
+      const result = await suggestOutfits({
+        season,
+        occasion,
+        anchorIds,
+        itemIds: items.map((i) => i.id),
+        count: SHOW_MORE_COUNT,
+      });
+      const existingSigs = new Set((outfits || []).map((o) => signatureOf(o.pieces)));
+      const additions = result.filter((o) => !existingSigs.has(signatureOf(o.pieces)));
+      setOutfits((prev) => [...(prev || []), ...additions]);
+      setMoreAvailable(additions.length > 0 && result.length >= SHOW_MORE_COUNT);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setShowMoreLoading(false);
     }
   }
 
@@ -291,6 +318,16 @@ export default function OutfitSuggestions({ items }) {
               onSwipeDislike={() => handleDislike(outfit)}
             />
           ))}
+          {moreAvailable && (
+            <button
+              onClick={handleShowMore}
+              disabled={showMoreLoading}
+              className="w-full rounded-xl border border-taupe/25 text-ink py-2.5 text-sm font-body font-bold active:bg-sky/10 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {showMoreLoading && <Spinner size={16} />}
+              {showMoreLoading ? "Finding more…" : "Show more outfits"}
+            </button>
+          )}
         </div>
       )}
 
