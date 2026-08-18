@@ -26,6 +26,13 @@ function loadStyleProfile(userId) {
   return buildStyleProfile(picks);
 }
 
+function loadInspirationDescriptors(userId) {
+  const rows = db
+    .prepare("SELECT descriptor FROM inspiration_images WHERE user_id = ? AND descriptor IS NOT NULL")
+    .all(userId);
+  return rows.map((r) => r.descriptor).filter(Boolean);
+}
+
 router.get("/suggest", async (req, res) => {
   const { season, occasion, anchorIds, itemIds, count } = req.query;
   const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(count, 10) || DEFAULT_LIMIT));
@@ -54,6 +61,7 @@ router.get("/suggest", async (req, res) => {
   );
 
   const styleProfile = loadStyleProfile(req.userId);
+  const inspirationDescriptors = loadInspirationDescriptors(req.userId);
 
   // Small requests (the default "top 3") go through the AI re-ranking pass.
   // Larger requests ("Show more") skip it and return a purely rule-based,
@@ -73,6 +81,7 @@ router.get("/suggest", async (req, res) => {
       occasion,
       pickCount: Math.min(limit, pool.length),
       styleDescriptor: styleProfile?.descriptor,
+      inspirationDescriptors,
     });
     return res.json((aiRanked || pool).slice(0, limit));
   }

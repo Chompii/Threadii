@@ -3,7 +3,6 @@ const TABS = [
   { key: "outfits", label: "Outfits", icon: OutfitsIcon },
   { key: "favorites", label: "Favorites", icon: FavoritesIcon },
   { key: "calendar", label: "Plan", icon: CalendarIcon },
-  { key: "account", label: "Account", icon: AccountIcon },
 ];
 
 function ClosetIcon({ active }) {
@@ -100,32 +99,10 @@ function CalendarIcon({ active }) {
   );
 }
 
-function AccountIcon({ active }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <circle
-        cx="12"
-        cy="8"
-        r="3.6"
-        stroke={active ? "#3D6A85" : "#8A6F52"}
-        strokeWidth="1.6"
-        fill={active ? "#3D6A8522" : "none"}
-      />
-      <path
-        d="M4.5 20c1.4-3.6 4.6-5.5 7.5-5.5s6.1 1.9 7.5 5.5"
-        stroke={active ? "#3D6A85" : "#8A6F52"}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
-  );
-}
-
 export default function BottomNav({ tab, onChange }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 bg-cream/95 backdrop-blur border-t border-taupe/15 safe-bottom">
-      <div className="max-w-md mx-auto grid grid-cols-5">
+      <div className="max-w-md mx-auto grid grid-cols-4">
         {TABS.map(({ key, label, icon: Icon }) => {
           const active = tab === key;
           return (

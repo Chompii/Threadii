@@ -105,6 +105,20 @@ db.exec(`
   );
 `);
 
+// Reference photos (Pinterest screenshots, etc.) the user uploads as "the
+// look I want" — each gets a Gemini vision description on upload, which is
+// then used as a soft style signal on the AI ranking prompt. Capped at 3 in
+// the route layer to keep the ranking prompt from ballooning.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS inspiration_images (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    image_path TEXT NOT NULL,
+    descriptor TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+`);
+
 // Migrations for databases created before these columns existed.
 const migrations = [
   "ALTER TABLE favorites ADD COLUMN note TEXT NOT NULL DEFAULT ''",

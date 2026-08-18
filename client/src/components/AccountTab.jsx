@@ -3,6 +3,7 @@ import { exportData } from "../api/client.js";
 import ClosetGaps from "./ClosetGaps.jsx";
 import WearStats from "./WearStats.jsx";
 import StyleProfile from "./StyleProfile.jsx";
+import InspirationBoard from "./InspirationBoard.jsx";
 import Spinner from "./Spinner.jsx";
 
 function formatMemberSince(createdAt) {
@@ -63,6 +64,8 @@ export default function AccountTab({ user, items, onLogout, onOpenArchived, onOp
       <WearStats />
 
       <StyleProfile items={items} />
+
+      <InspirationBoard />
 
       <ClosetGaps items={items} />
 

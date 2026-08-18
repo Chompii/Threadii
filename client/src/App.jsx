@@ -144,9 +144,27 @@ export default function App() {
       <header className="bg-steel safe-top sticky top-0 z-20 shadow-sm">
         <div className="max-w-md mx-auto px-4 py-3 flex items-center gap-2.5">
           <Logo size={32} />
-          <h1 className="font-display font-extrabold text-2xl text-cream tracking-tight">
+          <h1 className="font-display font-extrabold text-2xl text-cream tracking-tight flex-1">
             Threadii
           </h1>
+          <button
+            onClick={() => setTab("account")}
+            aria-label="Account"
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+              tab === "account" ? "bg-white/20" : "active:bg-white/10"
+            }`}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="3.6" stroke="#F1EAD9" strokeWidth="1.6" />
+              <path
+                d="M4.5 20c1.4-3.6 4.6-5.5 7.5-5.5s6.1 1.9 7.5 5.5"
+                stroke="#F1EAD9"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
+          </button>
         </div>
       </header>
 

@@ -128,6 +128,20 @@ export function removeStylePick(id) {
   return apiFetch(`/style/${id}`, { method: "DELETE" });
 }
 
+// --- inspiration ---
+
+export function getInspiration() {
+  return apiFetch("/inspiration");
+}
+
+export function addInspiration(formData) {
+  return apiFetch("/inspiration", { method: "POST", body: formData });
+}
+
+export function removeInspiration(id) {
+  return apiFetch(`/inspiration/${id}`, { method: "DELETE" });
+}
+
 // --- favorites ---
 
 export function getFavorites() {
