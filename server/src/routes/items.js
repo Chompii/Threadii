@@ -29,6 +29,7 @@ const upload = multer({
 const CATEGORIES = new Set(["top", "bottom", "dress", "outerwear", "shoes", "accessory"]);
 const SEASONS = new Set(["all", "spring", "summer", "fall", "winter"]);
 const OCCASIONS = new Set(["casual", "formal", "sport", "all"]);
+const FITS = new Set(["fitted", "regular", "relaxed"]);
 
 const router = Router();
 
@@ -41,7 +42,7 @@ router.get("/", (req, res) => {
 });
 
 router.post("/", upload.single("image"), (req, res) => {
-  const { name, category, color, season = "all", occasion = "casual", tags } = req.body;
+  const { name, category, color, season = "all", occasion = "casual", fit = "regular", tags } = req.body;
 
   if (!name || !category || !color) {
     return res.status(400).json({ error: "name, category, and color are required" });
@@ -55,15 +56,18 @@ router.post("/", upload.single("image"), (req, res) => {
   if (!OCCASIONS.has(occasion)) {
     return res.status(400).json({ error: `occasion must be one of: ${[...OCCASIONS].join(", ")}` });
   }
+  if (!FITS.has(fit)) {
+    return res.status(400).json({ error: `fit must be one of: ${[...FITS].join(", ")}` });
+  }
 
   const id = nanoid();
   const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
   const tagsJson = JSON.stringify(sanitizeTags(tags));
 
   db.prepare(
-    `INSERT INTO items (id, user_id, name, category, color, season, occasion, image_path, tags)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, req.userId, name, category, color.toLowerCase(), season, occasion, imagePath, tagsJson);
+    `INSERT INTO items (id, user_id, name, category, color, season, occasion, fit, image_path, tags)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, req.userId, name, category, color.toLowerCase(), season, occasion, fit, imagePath, tagsJson);
 
   const item = db.prepare("SELECT * FROM items WHERE id = ?").get(id);
   res.status(201).json(serializeItem(item));
@@ -75,7 +79,7 @@ router.patch("/:id", upload.single("image"), (req, res) => {
     .get(req.params.id, req.userId);
   if (!existing) return res.status(404).json({ error: "not found" });
 
-  const { name, category, color, season = "all", occasion = "casual", tags } = req.body;
+  const { name, category, color, season = "all", occasion = "casual", fit = "regular", tags } = req.body;
 
   if (!name || !category || !color) {
     return res.status(400).json({ error: "name, category, and color are required" });
@@ -88,6 +92,9 @@ router.patch("/:id", upload.single("image"), (req, res) => {
   }
   if (!OCCASIONS.has(occasion)) {
     return res.status(400).json({ error: `occasion must be one of: ${[...OCCASIONS].join(", ")}` });
+  }
+  if (!FITS.has(fit)) {
+    return res.status(400).json({ error: `fit must be one of: ${[...FITS].join(", ")}` });
   }
 
   let imagePath = existing.image_path;
@@ -102,7 +109,7 @@ router.patch("/:id", upload.single("image"), (req, res) => {
   const tagsJson = JSON.stringify(sanitizeTags(tags));
 
   db.prepare(
-    `UPDATE items SET name = ?, category = ?, color = ?, season = ?, occasion = ?, image_path = ?, tags = ?
+    `UPDATE items SET name = ?, category = ?, color = ?, season = ?, occasion = ?, fit = ?, image_path = ?, tags = ?
      WHERE id = ? AND user_id = ?`
   ).run(
     name,
@@ -110,6 +117,7 @@ router.patch("/:id", upload.single("image"), (req, res) => {
     color.toLowerCase(),
     season,
     occasion,
+    fit,
     imagePath,
     tagsJson,
     req.params.id,

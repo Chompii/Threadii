@@ -6,7 +6,7 @@ function describePiece(p) {
   return `${p.color} ${p.name} (${p.category})`;
 }
 
-function buildPrompt(candidates, { season, occasion, pickCount }) {
+function buildPrompt(candidates, { season, occasion, pickCount, styleDescriptor }) {
   const lines = candidates.map((c, i) => `${i}: ${c.pieces.map(describePiece).join(", ")}`);
   const context = [
     season && season !== "all" ? `season: ${season}` : null,
@@ -22,7 +22,7 @@ Judge each candidate the way a good stylist would:
 - Cohesion of formality: the shoes and outerwear should suit the same occasion as the rest of the outfit — casual sneakers under a formal look (or vice versa) is a mismatch, not a plus.
 - Layering: an outerwear piece worn over the top adds polish when it fits — favor outfits that layer well over ones that don't, all else equal.
 - Confidence: would the wearer feel genuinely good walking out the door in this, not just "technically matching."
-
+${styleDescriptor ? `\nWhat's known about this specific person's taste, from outfits they've told us they love: ${styleDescriptor} Weight that lightly — it's a preference signal, not a hard rule.\n` : ""}
 Pick the ${pickCount} that best hit those, ranked best first${context ? ` for ${context}` : ""}. For each pick, write one punchy, specific, encouraging sentence (max 20 words) on why it looks great.
 
 Candidates:
@@ -36,7 +36,7 @@ Respond as JSON: {"picks": [{"index": <candidate number>, "reason": "<sentence>"
 // still guarantees every candidate is a structurally valid, color-coordinated
 // outfit; this only reorders/relabels them. Returns null on any failure so
 // the caller can fall back to the plain rule-based ranking.
-export async function rankOutfitsWithAI(candidates, { season, occasion, pickCount = 3 } = {}) {
+export async function rankOutfitsWithAI(candidates, { season, occasion, pickCount = 3, styleDescriptor } = {}) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || candidates.length === 0) return null;
 
@@ -48,7 +48,7 @@ export async function rankOutfitsWithAI(candidates, { season, occasion, pickCoun
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: buildPrompt(candidates, { season, occasion, pickCount }) }] }],
+        contents: [{ parts: [{ text: buildPrompt(candidates, { season, occasion, pickCount, styleDescriptor }) }] }],
         generationConfig: { responseMimeType: "application/json" },
       }),
       signal: controller.signal,

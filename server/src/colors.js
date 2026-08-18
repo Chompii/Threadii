@@ -75,3 +75,10 @@ export function scoreOutfit(colors) {
   if (pairs === 0) return { score: 3, harmony: "tonal", pair: unique };
   return { score: total / pairs, harmony: worst.harmony, pair: worst.pair };
 }
+
+// Converts a raw pairwise color score (roughly 0.5-3) to a 0-100 "match"
+// percentage for display — used for accessory/shoe suggestions so the user
+// sees a concrete number instead of just a sorted list.
+export function toMatchPercent(score) {
+  return Math.round(Math.max(0, Math.min(1, score / 3)) * 100);
+}

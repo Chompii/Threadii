@@ -16,6 +16,7 @@ import exportRouter from "./routes/export.js";
 import statsRouter from "./routes/stats.js";
 import calendarRouter from "./routes/calendar.js";
 import packingRouter from "./routes/packing.js";
+import styleRouter from "./routes/style.js";
 import authRouter from "./routes/auth.js";
 import { requireAuth } from "./middleware/auth.js";
 import { UPLOADS_DIR } from "./paths.js";
@@ -39,6 +40,7 @@ app.use("/api/export", requireAuth, exportRouter);
 app.use("/api/stats", requireAuth, statsRouter);
 app.use("/api/calendar", requireAuth, calendarRouter);
 app.use("/api/packing", requireAuth, packingRouter);
+app.use("/api/style", requireAuth, styleRouter);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 

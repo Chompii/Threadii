@@ -9,11 +9,23 @@ const SORTS = [
   { value: "name", label: "Name (A–Z)" },
   { value: "category", label: "Category" },
 ];
+const STYLE_NUDGE_KEY = "threadii_style_nudge_dismissed";
+const STYLE_NUDGE_MIN_ITEMS = 3;
 
-export default function ClosetView({ items, onDelete, onEdit, onToggleLaundry }) {
+export default function ClosetView({ items, onDelete, onEdit, onToggleLaundry, onOpenStyle }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState("newest");
+  const [nudgeDismissed, setNudgeDismissed] = useState(
+    () => localStorage.getItem(STYLE_NUDGE_KEY) === "true"
+  );
+
+  function dismissNudge() {
+    localStorage.setItem(STYLE_NUDGE_KEY, "true");
+    setNudgeDismissed(true);
+  }
+
+  const showStyleNudge = onOpenStyle && !nudgeDismissed && items.length >= STYLE_NUDGE_MIN_ITEMS;
 
   const filtered = items.filter((item) => {
     if (category !== "all" && item.category !== category) return false;
@@ -37,6 +49,29 @@ export default function ClosetView({ items, onDelete, onEdit, onToggleLaundry })
 
   return (
     <div className="space-y-4">
+      {showStyleNudge && (
+        <div className="bg-white rounded-2xl border border-steel/25 p-4 shadow-sm flex items-center justify-between gap-3">
+          <p className="font-body text-sm text-ink">Tell us what you love to wear — get suggestions tuned to your taste.</p>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={dismissNudge}
+              className="font-caption text-xs text-taupe font-bold"
+            >
+              Later
+            </button>
+            <button
+              onClick={() => {
+                dismissNudge();
+                onOpenStyle();
+              }}
+              className="rounded-full bg-steel text-cream px-3 py-1.5 text-xs font-caption font-bold"
+            >
+              Set it up
+            </button>
+          </div>
+        </div>
+      )}
+
       {items.length > 0 && (
         <div className="space-y-2">
           <input

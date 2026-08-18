@@ -2,6 +2,7 @@ import { useState } from "react";
 import { exportData } from "../api/client.js";
 import ClosetGaps from "./ClosetGaps.jsx";
 import WearStats from "./WearStats.jsx";
+import StyleProfile from "./StyleProfile.jsx";
 import Spinner from "./Spinner.jsx";
 
 function formatMemberSince(createdAt) {
@@ -60,6 +61,8 @@ export default function AccountTab({ user, items, onLogout, onOpenArchived, onOp
       </div>
 
       <WearStats />
+
+      <StyleProfile items={items} />
 
       <ClosetGaps items={items} />
 

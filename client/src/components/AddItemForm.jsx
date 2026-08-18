@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { addItem } from "../api/client.js";
-import { CATEGORIES, SEASONS, OCCASIONS } from "../constants.js";
+import { CATEGORIES, SEASONS, OCCASIONS, FITS } from "../constants.js";
 import { detectDominantColorName } from "../colorDetection.js";
 import Spinner from "./Spinner.jsx";
 import TagInput from "./TagInput.jsx";
@@ -12,6 +12,7 @@ const initial = {
   color: "black",
   season: "all",
   occasion: "casual",
+  fit: "regular",
 };
 
 const fieldClass =
@@ -161,6 +162,26 @@ export default function AddItemForm({ onAdded }) {
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="font-caption text-xs text-taupe block mb-1">Fit</label>
+        <div className="flex gap-2">
+          {FITS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => update("fit", f)}
+              className={`flex-1 rounded-xl border py-2 text-sm font-body capitalize transition-colors ${
+                fields.fit === f
+                  ? "border-steel bg-steel text-cream font-bold"
+                  : "border-taupe/25 bg-white text-ink"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
         </div>
       </div>
 

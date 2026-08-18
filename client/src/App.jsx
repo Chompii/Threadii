@@ -161,6 +161,7 @@ export default function App() {
                 onDelete={handleDelete}
                 onEdit={setEditingItem}
                 onToggleLaundry={handleToggleLaundry}
+                onOpenStyle={() => setTab("account")}
               />
             ) : tab === "outfits" ? (
               <OutfitSuggestions items={items} />

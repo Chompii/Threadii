@@ -93,6 +93,18 @@ db.exec(`
   );
 `);
 
+// Up to 5 outfits (picked from the user's own closet) that represent what
+// they actually like to wear — used to derive a lightweight style profile
+// that nudges suggestion scoring/ranking. Capped at 5 in the route layer.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS style_picks (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    item_ids TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+`);
+
 // Migrations for databases created before these columns existed.
 const migrations = [
   "ALTER TABLE favorites ADD COLUMN note TEXT NOT NULL DEFAULT ''",
@@ -103,6 +115,7 @@ const migrations = [
   "ALTER TABLE items ADD COLUMN in_laundry INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE items ADD COLUMN archived INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE favorites ADD COLUMN collection TEXT",
+  "ALTER TABLE items ADD COLUMN fit TEXT NOT NULL DEFAULT 'regular'",
 ];
 for (const sql of migrations) {
   try {

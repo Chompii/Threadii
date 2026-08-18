@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { COLOR_SWATCH } from "../constants.js";
 import { harmonyLabel } from "../colorHarmony.js";
-import { getAccessorySuggestions, addFavorite } from "../api/client.js";
+import { getAccessorySuggestions, getShoeSuggestions, addFavorite } from "../api/client.js";
 import HeartIcon from "./HeartIcon.jsx";
 import Spinner from "./Spinner.jsx";
 
@@ -39,7 +39,10 @@ export default function OutfitDetail({
   const [collectionStatus, setCollectionStatus] = useState("idle");
   const [accessories, setAccessories] = useState([]);
   const [selectedAccessoryId, setSelectedAccessoryId] = useState(null);
-  const [accessorySaveStatus, setAccessorySaveStatus] = useState("idle"); // idle | saving | saved
+  const [shoes, setShoes] = useState([]);
+  const originalShoeId = outfit.pieces.find((p) => p.category === "shoes")?.id ?? null;
+  const [selectedShoeId, setSelectedShoeId] = useState(originalShoeId);
+  const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved
   const saveTimer = useRef(null);
   const collectionTimer = useRef(null);
   const label = harmonyLabel(outfit.harmony);
@@ -50,23 +53,31 @@ export default function OutfitDetail({
 
   useEffect(() => {
     setSelectedAccessoryId(null);
-    setAccessorySaveStatus("idle");
+    setSelectedShoeId(originalShoeId);
+    setSaveStatus("idle");
+    const nonShoeIds = outfit.pieces.filter((p) => p.category !== "shoes").map((p) => p.id);
     getAccessorySuggestions(outfit.pieces.map((p) => p.id))
       .then(setAccessories)
       .catch(() => setAccessories([]));
+    getShoeSuggestions(nonShoeIds)
+      .then(setShoes)
+      .catch(() => setShoes([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outfit.pieces.map((p) => p.id).join(",")]);
 
   const selectedAccessory = accessories.find((a) => a.id === selectedAccessoryId) || null;
+  const hasLookChanges = selectedShoeId !== originalShoeId || Boolean(selectedAccessory);
 
-  async function handleSaveWithAccessory() {
-    if (!selectedAccessory || accessorySaveStatus === "saving") return;
-    setAccessorySaveStatus("saving");
+  async function handleSaveLook() {
+    if (!hasLookChanges || saveStatus === "saving") return;
+    setSaveStatus("saving");
+    const baseIds = outfit.pieces.filter((p) => p.category !== "shoes").map((p) => p.id);
+    const finalIds = [...baseIds, selectedShoeId, selectedAccessory?.id].filter(Boolean);
     try {
-      await addFavorite([...outfit.pieces.map((p) => p.id), selectedAccessory.id]);
-      setAccessorySaveStatus("saved");
+      await addFavorite(finalIds);
+      setSaveStatus("saved");
     } catch {
-      setAccessorySaveStatus("idle");
+      setSaveStatus("idle");
     }
   }
 
@@ -207,6 +218,53 @@ export default function OutfitDetail({
             <p className="font-body text-sm text-ink leading-relaxed">{outfit.description}</p>
           </div>
 
+          {shoes.length > 0 && (
+            <div className="bg-white rounded-2xl border border-taupe/15 p-4 shadow-sm space-y-3">
+              <h3 className="font-caption text-xs text-taupe uppercase tracking-wide">Shoes</h3>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {shoes.map((s) => {
+                  const selected = s.id === selectedShoeId;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedShoeId(s.id);
+                        setSaveStatus("idle");
+                      }}
+                      className="shrink-0 w-16 flex flex-col items-center gap-1"
+                    >
+                      <div
+                        className={`relative w-16 h-16 rounded-xl overflow-hidden bg-sky/25 flex items-center justify-center border-2 transition-colors ${
+                          selected ? "border-steel" : "border-transparent"
+                        }`}
+                      >
+                        {s.image_path ? (
+                          <img src={s.image_path} alt={s.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span
+                            className="w-7 h-7 rounded-full border border-black/10"
+                            style={{ backgroundColor: COLOR_SWATCH[s.color] || "#ccc" }}
+                          />
+                        )}
+                        <span className="absolute bottom-0 inset-x-0 bg-ink/70 text-cream font-caption text-[9px] text-center py-0.5">
+                          {s.matchPercent}%
+                        </span>
+                      </div>
+                      <span
+                        className={`font-caption text-[10px] truncate w-full text-center ${
+                          selected ? "text-steel font-bold" : "text-taupe"
+                        }`}
+                      >
+                        {s.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {accessories.length > 0 && (
             <div className="bg-white rounded-2xl border border-taupe/15 p-4 shadow-sm space-y-3">
               <h3 className="font-caption text-xs text-taupe uppercase tracking-wide">
@@ -221,12 +279,12 @@ export default function OutfitDetail({
                       type="button"
                       onClick={() => {
                         setSelectedAccessoryId(selected ? null : a.id);
-                        setAccessorySaveStatus("idle");
+                        setSaveStatus("idle");
                       }}
                       className="shrink-0 w-16 flex flex-col items-center gap-1"
                     >
                       <div
-                        className={`w-16 h-16 rounded-xl overflow-hidden bg-sky/25 flex items-center justify-center border-2 transition-colors ${
+                        className={`relative w-16 h-16 rounded-xl overflow-hidden bg-sky/25 flex items-center justify-center border-2 transition-colors ${
                           selected ? "border-steel" : "border-transparent"
                         }`}
                       >
@@ -238,6 +296,9 @@ export default function OutfitDetail({
                             style={{ backgroundColor: COLOR_SWATCH[a.color] || "#ccc" }}
                           />
                         )}
+                        <span className="absolute bottom-0 inset-x-0 bg-ink/70 text-cream font-caption text-[9px] text-center py-0.5">
+                          {a.matchPercent}%
+                        </span>
                       </div>
                       <span
                         className={`font-caption text-[10px] truncate w-full text-center ${
@@ -250,19 +311,18 @@ export default function OutfitDetail({
                   );
                 })}
               </div>
-              {selectedAccessory && (
-                <button
-                  onClick={handleSaveWithAccessory}
-                  disabled={accessorySaveStatus === "saving" || accessorySaveStatus === "saved"}
-                  className="w-full rounded-xl border border-steel/30 text-steel py-2.5 text-sm font-body font-bold active:bg-sky/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {accessorySaveStatus === "saving" && <Spinner size={14} />}
-                  {accessorySaveStatus === "saved"
-                    ? `Saved with ${selectedAccessory.name} ✓`
-                    : `Save look with ${selectedAccessory.name}`}
-                </button>
-              )}
             </div>
+          )}
+
+          {hasLookChanges && (
+            <button
+              onClick={handleSaveLook}
+              disabled={saveStatus === "saving" || saveStatus === "saved"}
+              className="w-full rounded-xl border border-steel/30 text-steel py-2.5 text-sm font-body font-bold active:bg-sky/10 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {saveStatus === "saving" && <Spinner size={14} />}
+              {saveStatus === "saved" ? "Saved as a new favorite ✓" : "Save this look as a favorite"}
+            </button>
           )}
 
           {(onMarkWorn || onUnmarkWorn) && (

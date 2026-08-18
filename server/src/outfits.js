@@ -1,6 +1,8 @@
 import { scoreOutfit } from "./colors.js";
 import { describeOutfit } from "./describe.js";
 import { outfitSignature } from "./signature.js";
+import { fitBalanceBonus } from "./fit.js";
+import { styleProfileBonus } from "./style.js";
 
 const MAX_PER_OPTIONAL_SLOT = 6; // cap to keep combinations fast for large closets
 
@@ -54,7 +56,7 @@ function selectDiverse(sortedCandidates, limit) {
 // outfit gets built around, rather than just one option among many.
 export function suggestOutfits(
   allItems,
-  { season, occasion, limit = 3, anchorItems = [], excludeSignatures } = {}
+  { season, occasion, limit = 3, anchorItems = [], excludeSignatures, styleProfile = null } = {}
 ) {
   const anchorsByCategory = {};
   for (const a of anchorItems) anchorsByCategory[a.category] = a;
@@ -125,7 +127,10 @@ export function suggestOutfits(
       const pieces = [...partial, shoeChoice].filter(Boolean);
       const colors = pieces.map((p) => p.color);
       const { score, harmony, pair } = scoreOutfit(colors);
-      results.push({ pieces, score, harmony, pair });
+      // Fit-balance and style-profile nudges bias which outfits rank higher
+      // without touching the color-only harmony label shown to the user.
+      const bonus = fitBalanceBonus(pieces) + styleProfileBonus(pieces, harmony, styleProfile);
+      results.push({ pieces, score: score + bonus, harmony, pair });
     }
   }
 

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { updateItem, deleteItem, setArchived } from "../api/client.js";
-import { CATEGORIES, SEASONS, OCCASIONS } from "../constants.js";
+import { CATEGORIES, SEASONS, OCCASIONS, FITS } from "../constants.js";
 import { detectDominantColorName } from "../colorDetection.js";
 import Spinner from "./Spinner.jsx";
 import TagInput from "./TagInput.jsx";
@@ -16,6 +16,7 @@ export default function EditItemForm({ item, onSaved, onDeleted, onArchived }) {
     color: item.color,
     season: item.season,
     occasion: item.occasion,
+    fit: item.fit || "regular",
   });
   const [tags, setTags] = useState(item.tags || []);
   const [file, setFile] = useState(null);
@@ -181,6 +182,26 @@ export default function EditItemForm({ item, onSaved, onDeleted, onArchived }) {
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="font-caption text-xs text-taupe block mb-1">Fit</label>
+        <div className="flex gap-2">
+          {FITS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => update("fit", f)}
+              className={`flex-1 rounded-xl border py-2 text-sm font-body capitalize transition-colors ${
+                fields.fit === f
+                  ? "border-steel bg-steel text-cream font-bold"
+                  : "border-taupe/25 bg-white text-ink"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
         </div>
       </div>
 

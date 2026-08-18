@@ -104,6 +104,30 @@ export function getAccessorySuggestions(itemIds) {
   return apiFetch(`/outfits/accessories?${params.toString()}`);
 }
 
+export function getShoeSuggestions(itemIds) {
+  const params = new URLSearchParams();
+  params.set("itemIds", itemIds.join(","));
+  return apiFetch(`/outfits/shoes?${params.toString()}`);
+}
+
+// --- style profile ---
+
+export function getStyleProfile() {
+  return apiFetch("/style");
+}
+
+export function addStylePick(itemIds) {
+  return apiFetch("/style", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ itemIds }),
+  });
+}
+
+export function removeStylePick(id) {
+  return apiFetch(`/style/${id}`, { method: "DELETE" });
+}
+
 // --- favorites ---
 
 export function getFavorites() {

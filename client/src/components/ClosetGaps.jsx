@@ -1,4 +1,8 @@
+import { NEUTRAL_COLORS } from "../constants.js";
+
 const OCCASIONS_TO_CHECK = ["casual", "formal", "sport"];
+const MIN_ITEMS_FOR_COLOR_CHECK = 5;
+const LOW_NEUTRAL_THRESHOLD = 0.5; // styling guides target ~60-70% neutrals
 
 function analyzeGaps(items) {
   const gaps = [];
@@ -21,6 +25,16 @@ function analyzeGaps(items) {
     const hasOccasion = items.some((i) => i.occasion === occ);
     if (!hasOccasion) gaps.push(`Nothing tagged for ${occ} occasions.`);
   });
+
+  if (items.length >= MIN_ITEMS_FOR_COLOR_CHECK) {
+    const neutralCount = items.filter((i) => NEUTRAL_COLORS.has(i.color)).length;
+    const neutralRatio = neutralCount / items.length;
+    if (neutralRatio < LOW_NEUTRAL_THRESHOLD) {
+      const bottomNeutrals = items.filter((i) => i.category === "bottom" && NEUTRAL_COLORS.has(i.color)).length;
+      const hint = bottomNeutrals === 0 && byCategory.bottom ? " A neutral bottom (black, navy, gray) would unlock the most new combos." : "";
+      gaps.push(`Mostly bold colors, not many neutrals — harder to mix and match.${hint}`);
+    }
+  }
 
   return gaps;
 }
